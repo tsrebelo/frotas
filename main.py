@@ -252,9 +252,8 @@ class FleetManagementApp(ctk.CTk):
             ("🚗 Add Vehicle", self.show_add_vehicle),
             ("🗑️ Remove Vehicle", self.show_remove_vehicle),
             ("💰 Apply Discount", self.show_discount),
-            ("🔍 Filter Vehicles", self.show_filter),
-            ("📤 Export", self.show_export),
             ("📋 Inventory", self.show_inventory),
+            ("📤 Export", self.show_export),
             ("⚙️ Settings", self.show_settings)
         ]
         
@@ -790,17 +789,19 @@ class FleetManagementApp(ctk.CTk):
         except ValueError:
             messagebox.showerror("Error", "Please enter a valid percentage!")
     
-    def show_filter(self):
-
+    def show_inventory(self):
+        """Show complete inventory with filtering options"""
         self.clear_content()
-        self.content_title.configure(text="Filter Vehicles")
+        self.content_title.configure(text="Inventory")
         
-        filter_frame = ctk.CTkFrame(self.content_container, corner_radius=10)
-        filter_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        inventory_frame = ctk.CTkFrame(self.content_container, corner_radius=10)
+        inventory_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        options_frame = ctk.CTkFrame(filter_frame)
+        # Filter options
+        options_frame = ctk.CTkFrame(inventory_frame)
         options_frame.pack(fill="x", pady=20, padx=20)
         
+        # Filter by brand
         brand_frame = ctk.CTkFrame(options_frame)
         brand_frame.pack(fill="x", pady=10)
         
@@ -817,11 +818,12 @@ class FleetManagementApp(ctk.CTk):
         brand_button = ctk.CTkButton(
             brand_frame,
             text="Filter",
-            command=lambda: self.apply_filter("brand"),
+            command=lambda: self.apply_inventory_filter("brand"),
             width=80
         )
         brand_button.pack(side="left", padx=10)
 
+        # Filter by year
         year_frame = ctk.CTkFrame(options_frame)
         year_frame.pack(fill="x", pady=10)
         
@@ -838,11 +840,12 @@ class FleetManagementApp(ctk.CTk):
         year_button = ctk.CTkButton(
             year_frame,
             text="Filter",
-            command=lambda: self.apply_filter("year"),
+            command=lambda: self.apply_inventory_filter("year"),
             width=80
         )
         year_button.pack(side="left", padx=10)
         
+        # Filter by type
         type_frame = ctk.CTkFrame(options_frame)
         type_frame.pack(fill="x", pady=10)
         
@@ -866,18 +869,30 @@ class FleetManagementApp(ctk.CTk):
         type_button = ctk.CTkButton(
             type_frame,
             text="Filter",
-            command=lambda: self.apply_filter("type"),
+            command=lambda: self.apply_inventory_filter("type"),
             width=80
         )
         type_button.pack(side="left", padx=10)
-
-        self.results_frame = ctk.CTkFrame(filter_frame)
+        
+        # Clear filters button
+        clear_button = ctk.CTkButton(
+            options_frame,
+            text="Show All Vehicles",
+            command=lambda: self.display_inventory_vehicles(self.fleet.vehicles),
+            width=150,
+            fg_color="gray"
+        )
+        clear_button.pack(pady=20)
+        
+        # Results frame
+        self.results_frame = ctk.CTkFrame(inventory_frame)
         self.results_frame.pack(fill="both", expand=True, pady=20, padx=20)
-
-        self.display_filtered_vehicles(self.fleet.vehicles)
+        
+        # Show all vehicles initially
+        self.display_inventory_vehicles(self.fleet.vehicles)
     
-    def apply_filter(self, filter_type):
-        """Apply filter and display results"""
+    def apply_inventory_filter(self, filter_type):
+        """Apply filter to inventory"""
         if filter_type == "brand":
             brand = self.brand_filter_entry.get()
             if brand:
@@ -899,22 +914,24 @@ class FleetManagementApp(ctk.CTk):
         else:
             filtered = self.fleet.vehicles
         
-        self.display_filtered_vehicles(filtered)
+        self.display_inventory_vehicles(filtered)
     
-    def display_filtered_vehicles(self, vehicles):
-
+    def display_inventory_vehicles(self, vehicles):
+        """Display vehicles in inventory view"""
+        # Clear results frame
         for widget in self.results_frame.winfo_children():
             widget.destroy()
         
         if not vehicles:
             no_results_label = ctk.CTkLabel(
                 self.results_frame,
-                text="No vehicles found matching the criteria",
+                text="No vehicles in inventory",
                 font=ctk.CTkFont(size=14)
             )
             no_results_label.pack(pady=50)
             return
         
+        # Create treeview for results
         columns = ("Brand", "Model", "Type", "Price", "Year", "Tax")
         tree = ttk.Treeview(self.results_frame, columns=columns, show="headings", height=10)
         
@@ -924,28 +941,31 @@ class FleetManagementApp(ctk.CTk):
         
         tree.column("Brand", width=120)
         tree.column("Model", width=150)
+        tree.column("Type", width=100)
         
         scrollbar = ttk.Scrollbar(self.results_frame, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=scrollbar.set)
         
-        tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-    
+        tree.pack(side="left", fill="both", expand=True, padx=(10, 0), pady=10)
+        scrollbar.pack(side="right", fill="y", padx=(0, 10), pady=10)
+        
+        # Populate treeview
         for vehicle in vehicles:
-            vehicle_type = vehicle.__class__.__name__
             values = (
                 vehicle.brand,
                 vehicle.model,
-                vehicle_type,
+                vehicle.__class__.__name__,
                 f"€{vehicle.price:.2f}",
                 vehicle.year,
                 f"€{vehicle.calculate_tax():.2f}"
             )
             tree.insert("", "end", values=values)
         
+        # Count and total value
+        total_value = sum(v.price for v in vehicles)
         count_label = ctk.CTkLabel(
             self.results_frame,
-            text=f"Found {len(vehicles)} vehicle(s)",
+            text=f"Showing {len(vehicles)} vehicle(s) - Total value: €{total_value:,.2f}",
             font=ctk.CTkFont(size=12)
         )
         count_label.pack(pady=10)
@@ -1084,10 +1104,6 @@ class FleetManagementApp(ctk.CTk):
         
         text_widget.insert("1.0", preview_text)
         text_widget.configure(state="disabled")
-    
-    def show_inventory(self):
-        
-        self.show_filter()
     
     def show_settings(self):
 
