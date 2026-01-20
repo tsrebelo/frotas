@@ -230,22 +230,19 @@ class FleetManagementApp(ctk.CTk):
         
         ctk.CTkLabel(sidebar, text="Gestor de Frotas", font=ctk.CTkFont(size=20, weight="bold")).pack(pady=(20, 30))
         
-        # Botões de navegação
+        # Botões de navegação (removida a opção Definições)
         buttons = [
             ("📊 Dashboard", self.show_dashboard),
             ("🚗 Adicionar Veículo", self.show_add_vehicle),
             ("🗑️ Remover Veículo", self.show_remove_vehicle),
             ("💰 Aplicar Desconto", self.show_discount),
-            ("📋 Inventário", self.show_inventory),
-            ("📤 Exportar", self.show_export),
-            ("⚙️ Definições", self.show_settings)
+            ("🔍 Filtrar", self.show_inventory),  # Alterado de "📋 Inventário" para "🔍 Filtrar"
+            ("📤 Exportar", self.show_export)
         ]
         
         for text, command in buttons:
             btn = ctk.CTkButton(sidebar, text=text, command=command, height=40, corner_radius=8)
             btn.pack(pady=5, padx=10)
-        
-        ctk.CTkLabel(sidebar, text="Versão 1.0.0\n© 2024 Gestão de Frotas", font=ctk.CTkFont(size=10)).pack(side="bottom", pady=10)
     
     def create_main_content(self):
         self.content_frame = ctk.CTkFrame(self.main_container, corner_radius=10)
@@ -579,7 +576,7 @@ class FleetManagementApp(ctk.CTk):
     
     def show_inventory(self):
         self.clear_content()
-        self.content_title.configure(text="Inventário")
+        self.content_title.configure(text="Filtrar")  # Alterado de "Inventário" para "Filtrar"
         
         inventory_frame = ctk.CTkFrame(self.content_container, corner_radius=10)
         inventory_frame.pack(fill="both", expand=True, padx=20, pady=20)
@@ -763,47 +760,6 @@ class FleetManagementApp(ctk.CTk):
         
         text_widget.insert("1.0", preview_text)
         text_widget.configure(state="disabled")
-    
-    def show_settings(self):
-        self.clear_content()
-        self.content_title.configure(text="Definições")
-        
-        settings_frame = ctk.CTkFrame(self.content_container, corner_radius=10)
-        settings_frame.pack(fill="both", expand=True, padx=50, pady=50)
-        
-        # Aparência
-        appearance_frame = ctk.CTkFrame(settings_frame)
-        appearance_frame.pack(fill="x", pady=20)
-        
-        ctk.CTkLabel(appearance_frame, text="Aparência", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(0, 10))
-        
-        ctk.CTkLabel(appearance_frame, text="Tema:", font=ctk.CTkFont(size=14)).pack(pady=5)
-        theme = ctk.StringVar(value=ctk.get_appearance_mode())
-        ctk.CTkComboBox(appearance_frame, values=["dark", "light", "system"], variable=theme, command=lambda v: ctk.set_appearance_mode(v), width=150).pack(pady=5)
-        
-        # Informação do sistema
-        info_frame = ctk.CTkFrame(settings_frame)
-        info_frame.pack(fill="x", pady=20)
-        
-        ctk.CTkLabel(info_frame, text="Informação do Sistema", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(0, 10))
-        
-        info_text = f"""
-        Sistema de Gestão de Frotas v1.0.0
-        Veículos no sistema: {len(self.fleet.vehicles)}
-        Última atualização: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-        
-        Funcionalidades:
-        • Gestão de veículos (adicionar/remover)
-        • Cálculo de impostos (IVA 23%)
-        • Aplicação de descontos
-        • Filtros e pesquisa
-        • Exportação para múltiplos formatos
-        """
-        
-        ctk.CTkLabel(info_frame, text=info_text, font=ctk.CTkFont(size=12), justify="left").pack(pady=10)
-        
-        # Botão para dados de exemplo
-        ctk.CTkButton(settings_frame, text="Carregar Dados de Exemplo", command=self.load_sample_data, height=40, fg_color="gray").pack(pady=20)
     
     def load_sample_data(self):
         self.fleet.vehicles.clear()
