@@ -1,4 +1,0 @@
-Carro
-Mota
-Camião
-Autocarro
